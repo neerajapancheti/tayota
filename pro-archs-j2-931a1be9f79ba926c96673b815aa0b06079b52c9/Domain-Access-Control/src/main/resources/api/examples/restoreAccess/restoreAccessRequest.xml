@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RestoreAccessRQ RequestorId="90" RetransmissionIndicator="false" TimeStamp="2018-09-20T09:22:19" Version="2015.1">
+			<Accesses>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000021</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Suspend>
+						<ReasonId>1</ReasonId>
+						<Description>Chargeback</Description>
+					</Suspend>
+				</Access>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000022</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Suspend>
+						<ReasonId>5</ReasonId>
+						<Description>Restoring access to ticket</Description>
+					</Suspend>
+				</Access>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000023</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Suspend>
+						<ReasonId>5</ReasonId>
+						<Description>Chargeback</Description>
+					</Suspend>
+				</Access>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000024</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Suspend>
+						<ReasonId>5</ReasonId>
+						<Description>Chargeback</Description>
+					</Suspend>
+				</Access>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000025</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Suspend>
+						<ReasonId>5</ReasonId>
+						<Description>Chargeback</Description>
+					</Suspend>
+				</Access>
+			</Accesses>
+		</RestoreAccessRQ>

@@ -1,0 +1,45 @@
+#%RAML 1.0
+title: domain-access-control-1.0
+version: v0.1
+baseUri: https://mocksvc.mulesoft.com/mocks/bea37fb9-dcb7-416b-a291-7e76c01abe77/tsaccess/{version} # baseUri: https://mocksvc.mulesoft.com/mocks/bea37fb9-dcb7-416b-a291-7e76c01abe77/access/{version} # baseUri: https://mocksvc.mulesoft.com/mocks/a537b025-6fd3-4f1f-8321-4f9a1a2f6906/tsaccess/{version}
+baseUriParameters:
+mediaType: application/xml
+protocols: [HTTPS]
+
+uses:
+  grantAccessResourceType: resourceTypes/grantaccess.raml
+  restoreAccessResourceType: resourceTypes/restoreaccess.raml
+  suspendAccessResourceType: resourceTypes/suspendaccess.raml
+  updateAccessResourceType: resourceTypes/updateaccess.raml
+  getUsageResourceType: resourceTypes/getusage.raml
+
+traits:
+  secure: !include traits/secure.raml
+
+/ticket:     
+      
+  /grantaccess:
+    is: [secure]
+    description: grants access to TS
+    type: grantAccessResourceType.grantAccess
+
+  /restoreaccess:
+    is: [secure]
+    description: restores access to TS
+    type: restoreAccessResourceType.restoreAccess
+
+  /suspendaccess:
+    is: [secure]
+    description: suspens access to TS
+    type: suspendAccessResourceType.suspendAccess
+
+  /updateAccess:
+    is: [secure]
+    description: udpates access to TS
+    type: updateAccessResourceType.updateAccess
+
+/inquiry:
+  is: [secure]
+  description: getUsage
+  type: getUsageResourceType.inquiry
+    

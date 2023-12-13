@@ -1,0 +1,14 @@
+
+An error has occurred in the following:
+<b>Application: #[app.name] </b>
+Flow Name: #[vars.alertFlowName]
+<br>
+The error was: 
+#[error.message] 
+#[error.cause]
+
+
+<b>The Correlation ID was:</b> #[vars.vMerlinCorrelationId]
+
+<b>Required Actions:</b>
+<ul><li> Log into CloudHub and search for that Correlation ID </li><li> Raise Service Desk Ticket </li><li> Contact Internal Mulesoft Team </li></ul>

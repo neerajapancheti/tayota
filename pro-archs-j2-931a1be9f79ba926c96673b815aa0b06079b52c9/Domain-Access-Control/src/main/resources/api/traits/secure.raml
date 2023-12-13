@@ -1,0 +1,19 @@
+#%RAML 1.0 Trait
+
+usage: Apply this to any method that needs to be secured
+headers:
+  client_id:
+    description: Client_id
+    example: 5757gh76
+    required: true
+    type: string
+  client_secret:
+     type: string
+     example: 5757gh76
+     required: true
+     minLength: 1
+  client_correlationid:
+     type: string
+     example: 5757gh76wer2343242
+     required: true
+     minLength: 10

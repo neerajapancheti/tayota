@@ -1,0 +1,43 @@
+#%RAML 1.0 Library
+
+types: # global type definitions that can be reused throughout this API
+  grantAccessRequest: !include ../schemas/grantAccess/grantAccessRequest.xsd
+  #grantAccessResponse: !include ../schemas/grantAccess/BlacklistRecordResponse.xsd
+
+
+resourceTypes:
+  inquiry:
+    post:
+      description: post request for granting access
+      body:
+        application/xml:
+          #schema: !include ../schemas/grantAccess/grantAccessRequest.xsd
+          example: !include ../examples/getUsage/GetUsageRequest.xml
+      responses:
+        200:
+          body:
+            application/xml:
+              #schema: !include ../schemas/grantAccess/grantAccessResponse.xsd
+              #example: !include ../examples/grantAccess/grantAccessResponse.xml
+        400:
+          body:
+            applicaiton/xml:
+              #schema: !include ../schemas/HSHErrorResponse.xsd
+              #example: !include ../examples/HSHErrorResponse.xml
+        401:
+          description: A 401 - Forbidden is similar to a 403-Forbidden but specifically for when authentication is possible but has failed or no authentication has been provided.
+          body:
+            application/json:
+              example: !include ../examples/errors/example-error-401-1.json
+        403:
+          description: Example error code if the request is not authorised. This would occur is the calling client has not provided relevant security tokens or if the client is not authorised to use that version of the deployed API. No neatly formed response is provided for this. Simply a HTTP response code of 403.
+        404:
+          description: Example error response if the requested order has not been found. This might be possible if the combination of Order and Attraction is not found or if the customer email provided does not match the email on the Order.
+          body:
+            application/json:
+              example: !include ../examples/errors/example-error-404-1.json
+        500:
+          description: The 5XX range is reserved for error codes specifically related to the server functionality. The 5XX range specifically notes failures with the server. Merlin will generally wrap up server errors and other undefined errors that occur as a code 500.
+          body:
+            application/json:
+              example: !include ../examples/errors/example-error-500-1.json

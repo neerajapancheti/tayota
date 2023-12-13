@@ -1,0 +1,8 @@
+<GetAccessUsageRQ RequestorId="90" CorrelationId="234" EchoToken="qf" RetransmissionIndicator="23" TimeStamp="11/11/1984T12:30:00" TransactionIdentifier="23423" Version="32342">
+         <UsageRequest>
+            <AttractionId>1234</AttractionId>
+            <StartDateTime>12/23/1382</StartDateTime>
+            <StopDateTime>12/24/1382</StopDateTime>
+            <LastTransactionId>123123</LastTransactionId>
+         </UsageRequest>
+      </GetAccessUsageRQ>

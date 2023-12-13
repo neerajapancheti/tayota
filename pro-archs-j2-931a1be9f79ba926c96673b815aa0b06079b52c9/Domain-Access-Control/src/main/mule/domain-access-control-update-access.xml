@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="domain-access-control-update-access-flow" doc:id="28c4e798-4b3b-4edf-b4a6-3076b71e8b85" doc:description="This flow is for processing the Update Access requests.">
+		<set-variable value="domain-access-control-update-access-flow" doc:name="flowName" doc:id="ec9d3701-068e-4a1d-93c8-de7ac11b71a8" variableName="flowName" doc:description="This component sets the flowName variable which will be used later in the application for sending Notification Alerts."/>
+		<logger level="INFO" doc:name="Log Flow Started [INFO]" doc:id="cad9c2e4-6319-456a-b30e-5102f9671733" message="##MEG-CUSTOM## FLOW_START ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName] ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[attributes.headers.client_id]" category="com.merlin.log.custom" doc:description="This component logs the message information at INFO Level."/>
+		<flow-ref doc:name="access-system-lookup" doc:id="2e494e92-401d-450c-b899-3ba032383ada" name="domain-access-control-common-access-system-lookup-flow"/>
+		<try doc:name="Try" doc:id="a1b2a0fc-acd2-41df-9b8a-8749ce9f368e" doc:description="This component sets the flowName variable which will be used later in the application for sending Notification Alerts.">
+			<ee:transform doc:name="extract access requests collection" doc:description="This component extracts AccessRequest from the input payload." doc:id="fef002d4-c4db-41e4-82ba-b649cb25dde0">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+
+	payload.UpdateAccessRQ.Accesses.*Access map {
+		AccessRequest:$
+	} 
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="3a0a5dc6-eed3-4a05-ab23-cb2cbfefbcd3" type="ANY" doc:description="This component handles ANY error that may occur while extracting AccessRequest from input payload using Transform Message in the Try block above, and propogates it to parent error-handler.">
+					<raise-error doc:name="Raise Transform_Extract_AccessRequest Error" doc:id="3edebb11-6026-4f78-972c-90407c45f204" type="TRANSFORM:EXTRACT_ACCESSREQUEST" description="Error occurred while extracting Access Request " doc:description="This coponent raises Transform_Extract_AccessRequest Error specific to the transformation in try block above."/>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<foreach doc:name="For Each UpdateAccessRequest" doc:id="b35828cd-4776-4ac0-adf6-cb4c5d491fc5" collection="payload" doc:description="The For-Each scope splits the payload into elements/objects and processes them one by one through the components inside the scope. 
+The AccessRequest contains an array of AccessRequest objects which are needed to be transformed one by one into Whitelist Request and should be sent as input to update white-list records. 
+Go to help for more details about the component 'For-Each Scope'.">
+			<set-variable value="#[payload.AccessRequest.VisualId]" doc:name="Extract Ticket" doc:id="57cc34b3-d5d7-4828-823b-221f2b9ba660" variableName="ticketId"/>
+			<logger level="INFO" doc:name="Log Processing Start [INFO]" doc:id="ac716f6a-0eec-4577-9f5a-a71a3d943f6d" message="## MEG-CUSTOM ## PROCESSING REQUEST  ## TICKET NUMBER #[vars.ticketId] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName] ## ECID: #[vars.requestAttributes.headers.client_correlationid] ##  ## CALLING CLIENT: #[authentication.properties.clientName] " category="com.merlin.log.custom"/>
+			<logger level="DEBUG" doc:name="Log payload [DEBUG]" doc:id="03c3d6c1-00cc-4cf9-bb91-78d7a055eb3e" message="##MEG-CUSTOM## FOR EACH LOOP # #[vars.counter] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName] ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[attributes.headers.client_id] ##PAYLOAD BEFORE TRANSFORMING TO WHITELISTREQUEST:  #[payload]" category="com.merlin.log.custom" doc:description="This component logs the message information at DEBUG Level."/>
+			<try doc:name="Try" doc:id="3256663b-5d14-4d62-8ce0-5cf87ddcb299" doc:description="This Try scope handles the errors which might occur while transforming AccessRequest into update WhitelistRequest using Transform Message component.">
+				<ee:transform doc:name="AccessRequest to WhitelistReqeust" doc:description="This component transforms AccessRequest into update whitelist_record request payload." doc:id="4edb7d4a-6914-418a-baba-9663a025a82d">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+{
+TSData:	{
+		Header:{
+			Version:'HSHIF25',
+			Issuer:1,
+			Receiver:1
+		},
+	WhitelistRecord @(Expire: payload.AccessRequest.Validity.EndDateTime):{
+		Action:'U',
+		UTID: payload.AccessRequest.VisualId,
+		Coding: 262,
+		Permission:{
+			UPID:1,
+			TSProperty @(Type:'ACCESSCODE'):{
+				ID: payload.AccessRequest.AccessCode
+			},
+			TSProperty @(To: payload.AccessRequest.Validity.StartDateTime, From: payload.AccessRequest.Validity.EndDateTime, Type:'VALIDITY'):''			}
+	}
+	}
+}
+
+]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<error-handler >
+					<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="c0685395-4925-4dd9-a2c1-f4d280d31541" type="ANY" doc:description="This component handles ANY error that may occur while transforming AccessRequest into update WhiteList Request in the Try block above, and propogates it to parent error-handler.">
+						<raise-error doc:name="Raise Transform_Whitelist_Request Error" doc:id="52fbd547-a309-4513-91ea-a2ad51efbc83" type="TRANSFORM:WHITELIST_REQUEST" description="Error occurred while transforming Access Request to Whitelist Request" doc:description="This component raises Transform_Whitelist_Request Error specific to the transformation in try block above."/>
+					</on-error-propagate>
+				</error-handler>
+			</try>
+			<logger level="DEBUG" doc:name="Log payload [DEBUG]" doc:id="fdbbb0ed-0eb1-43ba-b456-fc129087aa15" message="##MEG-CUSTOM## FOR EACH LOOP # #[vars.counter] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName] ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[attributes.headers.client_id] ##PAYLOAD AFTER TRANSFORMING TO WHITELISTREQUEST:  #[payload]" category="com.merlin.log.custom" doc:description="This component logs the whitelist request information at DEBUG Level."/>
+			<http:request method="POST" doc:name="Update whitelist record" doc:id="b07f11c2-e1fa-4777-a6d9-be923c6f3521" config-ref="adapterHSH_httpRequest_configuration" path="/whitelist" doc:description="This component is used to consume Adapter-Handshake application for updating a Whitelist record.">
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	client_id : p('adapterhandshake.client_id'),
+	client_secret : p('adapterhandshake.client_secret'),
+	client_correlationid : p('adapterhandshake.correlationId'),
+	handshake_server : vars.handshakeServer,
+	handshake_port : vars.handshakePort
+}]]]></http:headers>
+			</http:request>
+				<choice doc:name="Choice" doc:id="90f44864-a4d9-497e-87b3-950dabe548cb" doc:description="This component routes the message either to success response creator route or failure response creator route, based on the response from update whitelist request. ">
+				<when expression="#[payload.HSHData.Error == null]">
+					<ee:transform doc:name="Success Response" doc:description="This component sets the success response for update-access-request." doc:id="6be22e9b-47d7-490b-b37d-c437574679e4">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+{
+  UpdateAccessRS @(Version: "2015.10", TimeStamp: "2018-10-17T15:14:41", RetransmissionIndicator: "false", RequestorId: "90"): {
+    Success: true
+  }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				</when>
+				<otherwise >
+					<ee:transform doc:name="Error Response" doc:description="This component sets the failure response for update-access-request." doc:id="2879c845-a5f7-40b6-a4d7-5b03acadb8b7" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+{
+  UpdateAccessRS @(Version: "2015.10", TimeStamp: "2018-10-17T15:14:41", RetransmissionIndicator: "false", RequestorId: "90"): {
+    Success: false
+  }
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</otherwise>
+			</choice>
+			<logger level="INFO" doc:name="Log Flow Exit [INFO]" doc:id="0c851da5-f488-4034-a64e-b2672d5af053" category="com.merlin.log.custom" message="##MEG-CUSTOM ## PROCESSING COMPLETE FOR TICKET ## TICKET ID #[vars.ticketId] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName] ##  ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[authentication.properties.clientName]"/>
+		</foreach>
+		<logger level="INFO" doc:name="Log Flow Exit [INFO]" doc:id="390b42d7-d4b4-4416-836f-04b057f30d54" category="com.merlin.log.custom" message="##MEG-CUSTOM ## FLOW_COMPLETE ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName] ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[authentication.properties.clientName] UPDATE ACCESS REQUEST COMPLETED"/>
+		<error-handler ref="common-exceptionsError_Handler"/>
+	</flow>
+</mule>

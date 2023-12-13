@@ -1,0 +1,13 @@
+<root>
+Standard 2 of 5,256
+Interleaved 2 of 5,257
+UPC,258
+PDF417,259
+Macro PDF417,259
+Micro PDF417 (2D),259
+EAN,260
+Code 39,261
+Code 128,262
+DataMatrix (2D),267
+QR Code (2D),270
+</root>

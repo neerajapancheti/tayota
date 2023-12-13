@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="domain-access-control-inquire-access-flow" doc:id="c25996f8-cd11-40e4-a761-c00b05433e7c" doc:description="This flow is for processing the Inquire Access requests.">
+		<set-variable value="domain-access-control-inquire-access-flow" doc:name="flowname" doc:id="542f0cc1-87af-4266-a6bb-51ce0fe89986" variableName="flowName" doc:description="This component sets the flowName variable which will be used later in the application for sending Notification Alerts."/>
+		<try doc:name="Try" doc:id="4ca107c2-87f9-4261-a67f-1c9ba0d8dbfa" doc:description="This Try scope handles the errors which might occur while extracting UsageRequest from input payload using Transform Message component.">
+			<ee:transform doc:name="exrtract collection" doc:description="This component extracts UsageRequest data from the input payload." doc:id="a4c9951f-d1bc-4a49-a5ed-a9980c14fd4c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+
+	payload.GetAccessUsageRQ.*UsageRequest map {
+		UsageRequest:$
+	} 
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="8ef2cc90-3285-4434-951f-abb25df70621" type="ANY" doc:description="This component handles ANY error that may occur while extracting UsageRequest from input payload using Transform Message in the Try block above, and propogates it to parent error-handler.">
+					<raise-error doc:name="Raise Transform_Extract_UsageRequest Error" doc:id="050edad0-1828-422c-995f-c9e34daba798" type="TRANSFORM:EXTRACT_USAGEREQUEST" description="Error occurred while extracting Usage Request " doc:description="This component raises Transform_Extract_UsageRequest Error specific to the transformation in try block above."/>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<foreach doc:name="For Each" doc:id="d80c61bf-1d36-4e25-ba0c-63ac91309a17" doc:description="This scope splits AccessRequest array into objects which are needed to be transformed one by one into HSH-Inquire Request.">
+			<logger level="INFO" doc:name="Log payload" doc:id="b63fb67f-df7b-4b6d-b5a7-9ae83d4f3c8e" message="#[payload]" doc:description="This component logs the message information at INFO Level."/>
+			<try doc:name="Try" doc:id="efdd7986-8696-4a99-b828-f31f91d49cb5" doc:description="This Try scope handles the errors which might occur while transforming UsageRequest into HSH-InquireRequest using Transform Message component.">
+				<ee:transform doc:name="GetUsageRequest to HSH inquire" doc:description="This component transforms the UsageRequest payload into HSH_InquireRequest payload" doc:id="0c51e12d-2d70-419f-8060-08020c5f2bda">
+				<ee:message>
+					<ee:set-payload><![CDATA[payload]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="d92c9ca0-ffd5-4336-9ee8-f189f9742f90" type="ANY" doc:description="This component handles ANY error that may occur while transforming UsageRequest into HSH-InquireRequest in the Try block above, and propogates it to parent error-handler.">
+					<raise-error doc:name="Raise Transform_HSH_InquireRequest Error" doc:id="abc06e80-8df3-4edc-9af3-ca82560ffaa1" type="TRANSFORM:HSH_INQUIREREQUEST" description="Error occurred while transforming Access Request to HSH Inquire Request" doc:description="This component raises Transform_HSH_InquireRequest Error specific to the transformation in try block above."/>
+				</on-error-propagate>
+			</error-handler>
+			</try>
+			<http:request method="GET" doc:name="adapter-handshake inquire" doc:id="ff0b606c-9003-4f1b-8fc1-0e980cb6099c" config-ref="adapterHSH_httpRequest_configuration" path="/inquiry" doc:description="This component is used to consume Adapter-Handshake application for HSH-inquiry."/>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:description="This component sets the success/failure response for HSH-inquire-request." doc:id="5e77f446-e7f9-49dc-984d-1b3a21132afc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+{
+  GrantAccessRS @(Version: "2015.10", TimeStamp: "2018-10-17T15:14:41", RetransmissionIndicator: "false", RequestorId: "90"): {
+    Success: null
+  }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Flow Exit [INFO]" doc:id="f878441f-cb00-44f0-b079-4631569124e4" category="com.merlin.log.custom" message="##MEG-CUSTOM ## FLOW_COMPLETE ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName] ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[authentication.properties.clientName] INQUIRE ACCESS REQUEST COMPLETED"/>
+		<error-handler ref="common-exceptionsError_Handler"/>
+	</flow>
+</mule>

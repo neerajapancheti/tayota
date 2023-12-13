@@ -1,0 +1,12 @@
+
+"An error has occurred in the following:
+<b>Application:" ++ appName ++ "</b>
+Flow Name: " ++ flowName ++"
+<br>
+The error was: " ++ errorMessage ++ "
+
+
+<b>The Correlation ID was:</b> " ++ merlinCorrelationId ++ "
+
+<b>Required Actions:</b>
+<ul><li> Log into CloudHub and search for that Correlation ID </li><li> Raise Service Desk Ticket </li><li> Contact Internal Mulesoft Team </li></ul>"

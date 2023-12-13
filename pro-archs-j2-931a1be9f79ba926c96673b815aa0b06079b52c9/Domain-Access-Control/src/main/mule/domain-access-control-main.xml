@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd">
+
+   <flow name="domain-access-control-main" doc:description="This is the main flow and would be called first for any incoming request.">
+        <http:listener config-ref="domain-access-control-httpListenerConfig" path="/api/*" doc:name="HTTP Inbound Request" doc:description="This HTTP connector listens to all the incoming requests for the API and provides the response to the requester.">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+            </http:error-response>
+        </http:listener>
+        <set-variable value="domain-access-control-main" doc:name="set flow name variable" doc:id="e324f7fa-16c4-4087-9fb5-495ed3e389d7" variableName="flowName" doc:description="This component sets the flowName variable which will be used later in the application for sending Notification Alerts."/>
+		<set-variable value="#[attributes]" doc:name="save reqeust attributes" doc:id="e192bd28-bd4a-4a35-a912-96366f48b56f" variableName="requestAttributes" doc:description="This component saves the inbound properties in requestAttributes variable, to be used later in the application."/>
+		<logger level="INFO" doc:name="Log Flow Started [INFO]" doc:id="0bdf55c9-1797-4d90-b519-ba93e97ef186" message='##MEG-CUSTOM## FLOW_START ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName] ## ECID: #[attributes.headers.client_correlationid] ## CALLING CLIENT: #[attributes.headers.client_id]' category="com.merlin.log.custom" doc:description="This component logs the message information at INFO Level."/>
+		<logger level="DEBUG" doc:name="Log Flow Started [DEBUG]" doc:id="73ff5a3b-421d-48fc-889b-0217e6e2b3f3" message='##MEG-CUSTOM## FLOW_START ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName] ## ECID: #[attributes.headers.client_correlationid] ## CALLING CLIENT: #[attributes.headers.client_id] ## PAYLOAD: #[payload]' doc:description="This component logs the message information at DEBUG Level." category="com.merlin.log.custom"/>
+		<apikit:router config-ref="domain-access-control-config" doc:description="This component is responsible for routing the incoming request to the appropriate flow for processing. It also handles any kind of bad request."/>
+        <error-handler ref="api-kit-error-handler"/>
+    </flow>
+</mule>

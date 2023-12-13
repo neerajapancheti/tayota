@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+	<sub-flow name="domain-access-control-common-access-system-lookup-flow" doc:id="1dd2ae5e-1327-45e4-adfe-fa13f1cced91" >
+		<logger level="DEBUG" doc:name="Log Flow Invoked [DEBUG" doc:id="c3746593-8972-4393-962e-cdd8118de803" message="attributes.queryParams.system" category="com.merlin.log.custom"/>
+		<set-variable value="#[payload]" doc:name="Save Original Payload" doc:id="a49da443-7a02-4346-a1fa-e3b364f2f997" variableName="originalPayload"/>
+		<java:invoke-static doc:name="Invoke static" doc:id="f539b89b-643b-40f7-849a-d69b67489861" class="biz.merlinentertainments.esb.service.admissions.AccessSystemIdMap" method="getAccessSystemId(String)" target="accessSystemPayload">
+			<java:args><![CDATA[#[arg0: payload[0].IssuerId]]]></java:args>
+</java:invoke-static>
+		<set-variable value="#[p('handshakesystem.' ++ vars.accessSystemPayload as String ++ '.hostname') as String]" doc:name="Set Handshake Server" doc:id="7bcb155c-5805-4002-b152-e3446b6493b9" variableName="handshakeServer" />
+		<set-variable value="#[p('handshakesystem.' ++ vars.accessSystemPayload as String ++ '.port') as String]" doc:name="Set Handshake Port" doc:id="d1727c10-f953-4964-bb5e-f0c707809abc" variableName="handshakePort" />
+		<set-payload value="#[vars.originalPayload]" doc:name="Set Payload" doc:id="d8f366a0-74fc-4692-a090-fe9c8378a187" />
+		<logger level="INFO" doc:name="Logger" doc:id="380eff51-5ab9-462f-b94e-7cf2ccda9a78" message="## MEG-CUSTOM ## ACCESS SYSTEM LOOKUP  ## HANDSHAKE SERVER:  #[vars.handshakeServer] ## HANDSHAKE PORT: #[vars.handshakePort] ## FLOW_NAME: #[vars.flowName] ## ECID: #[vars.requestAttributes.headers.client_correlationid] ##  ## CALLING CLIENT: #[authentication.properties.clientName] " category="com.merlin.log.custom"/>
+	</sub-flow>
+	<sub-flow name="domain-access-control-common-coding-info-lookup-flow" doc:id="410fa07b-dbfa-4b1c-ac9b-9a3ff4f68f4a" >
+		<logger level="DEBUG" doc:name="Log Flow Invoked [DEBUG" doc:id="3e9b022b-8c5e-42b9-bd80-8a9edf52a902" message="attributes.queryParams.system" category="com.merlin.log.custom"/>
+		<java:invoke-static doc:name="Invoke static" doc:id="249cd3d8-e21e-446e-8e5c-8b9c8e3d3182" class="biz.merlinentertainments.esb.service.admissions.CodingInfoLookUp" method="getCodingInfo(String)">
+			<java:args ><![CDATA[#[arg0: attributes.queryParams.coding]]]></java:args>
+		</java:invoke-static>
+		<set-variable value="#[payload]" doc:name="Set CodingInfo Value" doc:id="0b43bb47-4650-4b2f-9431-198447221c71" variableName="codingType" />
+	</sub-flow>
+</mule>

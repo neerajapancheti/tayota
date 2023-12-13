@@ -1,0 +1,29 @@
+<xs:element name="GrantAccessRS">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="Success"/>
+			</xs:sequence>
+			<xs:attribute name="Version" use="required">
+				<xs:simpleType>
+					<xs:restriction base="xs:decimal">
+						<xs:enumeration value="2015.1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+			<xs:attribute name="TimeStamp" use="required">
+				<xs:simpleType>
+					<xs:restriction base="xs:dateTime">
+						<xs:enumeration value="2018-10-17T15:14:41"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+			<xs:attribute name="RetransmissionIndicator" type="xs:boolean" use="required"/>
+			<xs:attribute name="RequestorId" use="required">
+				<xs:simpleType>
+					<xs:restriction base="xs:byte">
+						<xs:enumeration value="90"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>

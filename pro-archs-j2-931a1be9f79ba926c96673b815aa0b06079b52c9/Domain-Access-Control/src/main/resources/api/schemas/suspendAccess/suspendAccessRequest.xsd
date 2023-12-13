@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SuspendAccessRQ RequestorId="90" RetransmissionIndicator="false" TimeStamp="2018-05-15T13:51:40" Version="2015.1">
+			<Accesses>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000021</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Suspend>
+						<ReasonId>1</ReasonId>
+						<Description>Returned</Description>
+					</Suspend>
+				</Access>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000022</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Suspend>
+						<ReasonId>5</ReasonId>
+						<Description>Returned</Description>
+					</Suspend>
+				</Access>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000023</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Suspend>
+						<ReasonId>51</ReasonId>
+						<Description>Deactivated - Missed Payment</Description>
+					</Suspend>
+				</Access>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000024</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Suspend>
+						<ReasonId>64</ReasonId>
+						<Description>Deactivated - Suspected Credit Fraud</Description>
+					</Suspend>
+				</Access>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000025</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Suspend>
+						<ReasonId>66</ReasonId>
+						<Description>Deactivated - In Collection</Description>
+					</Suspend>
+				</Access>
+			</Accesses>
+		</SuspendAccessRQ>

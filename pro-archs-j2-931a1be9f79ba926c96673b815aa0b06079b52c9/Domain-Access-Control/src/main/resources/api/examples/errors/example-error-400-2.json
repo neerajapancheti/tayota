@@ -1,0 +1,7 @@
+{
+  "error" : {
+    "code" : "400",
+    "message" : "Bad Request",
+    "description" : "Required query parameter not specified"
+  }
+}

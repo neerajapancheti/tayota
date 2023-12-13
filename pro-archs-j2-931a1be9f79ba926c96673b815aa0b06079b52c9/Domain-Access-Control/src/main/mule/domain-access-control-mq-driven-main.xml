@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd">
+
+    
+    <flow name="mq-grant-access-flow" doc:id="60c9aa94-1e42-4ce3-a663-e5ecfe1fd2ff" doc:description="This flow is for processing the Grant Access requests via Queue.">
+		<anypoint-mq:subscriber doc:name="GrantAccessQueue Subscriber" doc:id="58c4c17b-63e7-4963-97da-91d0013df248" config-ref="Anypoint_MQ_Default_subscriber" destination="${anypointmq.grantaccessqueue}" doc:description="This MQ connector subscribes the messages from GrantAccess Queue."/>
+		<set-variable value="mq-grant-access-flow" doc:name="Set Flow Name" doc:id="30861ab2-854c-4059-bf64-8cb9dabd382e" variableName="flowName"/>
+		<set-variable value="#[message.attributes.message.headers.messageId]" doc:name="Set Message Id" doc:id="8d5b32c3-ddb4-4e94-81cc-d29108ca0dcc" variableName="messageId"/>
+		<ee:transform doc:name="Extract Header From Message properties" doc:id="0fa21c79-792f-4b66-9aa7-77b45e59cc2b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="requestAttributes" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	headers:{
+		client_id: attributes.message.properties.clientId,
+		client_secret:attributes.message.properties.clientSecret,
+		client_correlationid:attributes.message.properties.correlationId
+	}
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Flow Started [INFO]" doc:id="2e2fbda3-394d-4bf4-9a3e-d52cea21650d" message="##MEG-CUSTOM ## RECEIVED GRANT ACCESS REQUEST FROM QUEUE ## Message Id #[vars.messageId] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName]  ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[authentication.properties.clientName]" category="com.merlin.log.custom"/>
+		<logger level="DEBUG" doc:name="Log Flow Started [DEBUG]" doc:id="d9caa755-05d0-4f05-9070-a370e4984abc" message="##MEG-CUSTOM ## RECEIVED GRANT ACCESS REQUEST FROM QUEUE ## Message Id #[vars.messageId] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName]  ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[authentication.properties.clientName] ## PAYLOAD : #[payload]" category="com.merlin.log.custom" doc:description="This component logs the message information at INFO Level."/>
+		<set-payload value="#[payload]" doc:name="convert mime type to application/xml" doc:id="02c9dc47-591a-40c4-ae92-3257649b7c7c" mimeType="application/xml" doc:description="This component sets the mime type of the input payload to application/xml."/>
+		<choice doc:name="is payload null?" doc:id="3c259c2b-19d7-4045-8085-72ddea28bc8d" doc:description="This component routes the message to grant-access-flow route when input payload is not null, else routes it to failure route.">
+			<when expression="#[payload == null]">
+				<logger level="INFO" doc:name="Log incorrect payload [INFO]" doc:id="eea13d96-13e5-417a-a268-45a03ff0282c" message="##MEG-CUSTOM ## ERROR IN THE MESSAGE ## Message Id #[message.attributes.message.headers.messageId] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName]  ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[authentication.properties.clientName]" category="com.merlin.log.custom"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="grant-access-flow" doc:id="a9d20de2-8d2e-4b61-a542-edc60d5cd262" name="domain-access-control-grant-access-flow" />
+			</otherwise>
+		</choice>
+	</flow>
+    <flow name="mq-restore-access-flow" doc:id="c9147746-df54-4550-9c01-4ec1813912c5" doc:description="This flow is for processing the Restore Access requests via Queue.">
+		<anypoint-mq:subscriber doc:name="RestoreAccess Queue Subscriber" doc:id="f8faf5e8-dd38-4691-a91e-a567e93785fb" config-ref="Anypoint_MQ_Default_subscriber" destination="${anypointmq.restoreaccessqueue}" doc:description="This MQ connector subscribes the messages from RestoreAccess Queue."/>
+		<set-variable value="mq-restore-access-flow" doc:name="Set Flow Name" doc:id="640217aa-a75f-456b-b76e-ee5d24612953" variableName="flowName"/>
+		<set-variable value="#[message.attributes.message.headers.messageId]" doc:name="Set Message Id" doc:id="a0f692ea-42ed-47ea-b265-43dd18c701b4" variableName="messageId"/>
+		<ee:transform doc:name="Extract Header From Message properties" doc:id="7e52badb-4b10-48ff-9ce2-60ac81ece306" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="requestAttributes" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	headers:{
+		client_id: attributes.message.properties.clientId,
+		client_secret:attributes.message.properties.clientSecret,
+		client_correlationid:attributes.message.properties.correlationId
+	}
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Flow Started [INFO]" doc:id="10e11113-244c-4d7e-a4c3-b8e2f1b3f2a2" message="##MEG-CUSTOM ## RECEIVED RESTORE ACCESS REQUEST FROM QUEUE ## Message Id #[vars.messageId] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName]  ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[authentication.properties.clientName]" category="com.merlin.log.custom"/>
+		<logger level="DEBUG" doc:name="Log Flow Started [DEBUG]" doc:id="5f337c81-509c-4d5c-8701-3a88cf59837f" message="##MEG-CUSTOM ## RECEIVED RESTORE ACCESS REQUEST FROM QUEUE ## Message Id #[vars.messageId] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName]  ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[authentication.properties.clientName] #[payload]" category="com.merlin.log.custom" doc:description="This component logs the message information at INFO Level."/>
+		<set-payload value="#[payload]" doc:name="convert mime type to application/xml" doc:id="c21b9b86-42e4-44be-87d2-7ce0c96cbbc9" mimeType="application/xml" doc:description="This component sets the mime type of the input payload to application/xml."/>
+		<choice doc:name="NullPaylod?" doc:id="d17c0899-06fa-4f42-8492-24d47ab1d3d6" doc:description="This component routes the message to restore-access-flow route when input payload is not null, else routes it to failure route.">
+			<when expression="#[payload == null]">
+				<logger level="INFO" doc:name="Log incorrect payload [INFO]" doc:id="ad6b3281-f37d-458a-a702-6ec73576c229" message="##MEG-CUSTOM ## ERROR IN THE MESSAGE ## Message Id #[message.attributes.message.headers.messageId] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName]  ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[authentication.properties.clientName]" category="com.merlin.log.custom"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="restore-access-flow" doc:id="be4bb17c-d5fb-4f57-b229-acec02d32aeb" name="domain-access-control-restore-access-flow" />
+			</otherwise>
+		</choice>
+	</flow>
+    <flow name="mq-suspend-access-flow" doc:id="4e0d5e5f-1c4c-4a8b-b0b6-ab3b98ee1bd5" doc:description="This flow is for processing the Suspend Access requests via Queue.">
+		<anypoint-mq:subscriber doc:name="SuspendAccess Queue Subscriber" doc:id="0bfb2001-180d-406f-8616-c64be0c860e5" config-ref="Anypoint_MQ_Default_subscriber" destination="${anypointmq.suspendaccessqueue}" doc:description="This MQ connector subscribes the messages from SuspendAccess Queue."/>
+		<set-variable value="mq-restore-access-flow" doc:name="Set Flow Name" doc:id="94ca379b-5268-4ae3-86dc-f79e447c0b74" variableName="flowName"/>
+		<set-variable value="#[message.attributes.message.headers.messageId]" doc:name="Set Message Id" doc:id="d1c38bcd-6293-4588-a2cb-ffeef471c0e1" variableName="messageId"/>
+		<ee:transform doc:name="Extract Header From Message properties" doc:id="6e5fd62d-0767-45e0-8ed4-0d0b467ceb79" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="requestAttributes" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	headers:{
+		client_id: attributes.message.properties.clientId,
+		client_secret:attributes.message.properties.clientSecret,
+		client_correlationid:attributes.message.properties.correlationId
+	}
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Flow Started [INFO]" doc:id="37eeb442-b6ba-4176-9fc2-e727544489af" message="##MEG-CUSTOM ## RECEIVED RESTORE ACCESS REQUEST FROM QUEUE ## Message Id #[vars.messageId] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName]  ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[authentication.properties.clientName]" category="com.merlin.log.custom"/>
+		<logger level="DEBUG" doc:name="Log Flow Started [DEBUG]" doc:id="803c2a66-97e6-4ef7-a85d-c8a81557d6ed" message="##MEG-CUSTOM ## RECEIVED RESTORE ACCESS REQUEST FROM QUEUE ## Message Id #[vars.messageId] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName]  ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[authentication.properties.clientName] #[payload]" category="com.merlin.log.custom" doc:description="This component logs the message information at INFO Level."/>
+		<set-payload value="#[payload]" doc:name="convert mime type to application/xml" doc:id="8851a7ee-5895-4c54-bb03-3b675aa9de72" mimeType="application/xml" doc:description="This component sets the mime type of the input payload to application/xml."/>
+		<choice doc:name="Choice" doc:id="010eb384-fafe-4a93-b800-bb114eb51973" doc:description="This component routes the message to suspend-access-flow route when input payload is not null, else routes it to failure route.">
+			<when expression="#[payload == null]">
+				<logger level="INFO" doc:name="Logger" doc:id="273768cc-0959-4cfb-94dd-6bdfcb9cf2f8" message="No Data Found"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="suspend-access-flow" doc:id="e2c4865e-b274-4c41-8dcf-8d72c8f2a48e" name="domain-access-control-suspend-access-flow" />
+			</otherwise>
+		</choice>
+	</flow>
+    
+     <flow name="mq-update-access-flow" doc:id="b33917fd-25f2-46e6-b6c6-7128840d0c5b" doc:description="This flow is for processing the Update Access requests via Queue.">
+		<anypoint-mq:subscriber doc:name="UpdateAccess Queue Subscriber" doc:id="cf8b7134-695f-4aa3-ae3f-4153e16a3bf9" config-ref="Anypoint_MQ_Default_subscriber" destination="${anypointmq.updateaccessqueue}" doc:description="This MQ connector subscribes the messages from UpdateAccess Queue."/>
+		<set-variable value="mq-restore-access-flow" doc:name="Set Flow Name" doc:id="74922224-ad49-44ea-ae93-42b13d2c85cd" variableName="flowName"/>
+		<set-variable value="#[message.attributes.message.headers.messageId]" doc:name="Set Message Id" doc:id="34b6fef6-5184-4209-b916-341b7d2ea05f" variableName="messageId"/>
+		<ee:transform doc:name="Extract Header From Message properties" doc:id="d6cefe99-7200-48f6-a2af-6bf3c56eed3c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="requestAttributes" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	headers:{
+		client_id: attributes.message.properties.clientId,
+		client_secret:attributes.message.properties.clientSecret,
+		client_correlationid:attributes.message.properties.correlationId
+	}
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log Flow Started [INFO]" doc:id="bd15cb77-8990-4e38-900a-fed44c7aff18" message="##MEG-CUSTOM ## RECEIVED RESTORE ACCESS REQUEST FROM QUEUE ## Message Id #[vars.messageId] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName]  ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[authentication.properties.clientName]" category="com.merlin.log.custom"/>
+		<logger level="DEBUG" doc:name="Log Flow Started [DEBUG]" doc:id="5191bc65-36f6-49ac-aa37-688d3e04a3ba" message="##MEG-CUSTOM ## RECEIVED RESTORE ACCESS REQUEST FROM QUEUE ## Message Id #[vars.messageId] ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName]  ## ECID: #[vars.requestAttributes.headers.client_correlationid] ## CALLING CLIENT: #[authentication.properties.clientName] #[payload]" category="com.merlin.log.custom" doc:description="This component logs the message information at INFO Level."/>
+		<set-payload value="#[payload]" doc:name="convert mime type to application/xml" doc:id="19d2d8b8-ee3a-409d-85ad-47a777e33f50" mimeType="application/xml" doc:description="This component sets the mime type of the input payload to application/xml."/>
+		<choice doc:name="Choice" doc:id="aed4d93b-a132-42f6-a46c-a4f769644aee" doc:description="This component routes the message to update-access-flow route when input payload is not null, else routes it to failure route.">
+			<when expression="#[payload == null]">
+				<logger level="INFO" doc:name="Logger" doc:id="f288a44f-d6e3-452d-a13f-4c856ff67b54" message="No Data Found"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="update-access-flow" doc:id="56d84f5e-a1c0-496f-b1c9-ac52d0b14652" name="domain-access-control-update-access-flow" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<UpdateAccessRQ RequestorId="90" RetransmissionIndicator="false" TimeStamp="2018-10-04T07:46:05" Version="2015.1">
+			<Accesses>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000021</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Validity>
+						<StartDateTime>2018-12-19T00:00:00</StartDateTime>
+						<EndDateTime>2018-12-19T23:59:59</EndDateTime>
+					</Validity>
+				</Access>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000022</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Validity>
+						<StartDateTime>2018-12-19T00:00:00</StartDateTime>
+						<EndDateTime>2018-12-19T23:59:59</EndDateTime>
+					</Validity>
+				</Access>
+			</Accesses>
+		</UpdateAccessRQ>

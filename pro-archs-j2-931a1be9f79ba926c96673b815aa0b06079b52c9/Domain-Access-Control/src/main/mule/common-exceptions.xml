@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	
+	
+
+	<error-handler name="common-exceptionsError_Handler" doc:id="d0f1aa34-2cc0-4ecf-a180-296ecd5b229d" >
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="1039d3d2-b402-4c05-9b80-88ebf3b07b04" >
+			<flow-ref doc:name="Flow Reference" doc:id="4985ede4-95ba-4f43-baa3-ae63a7902fd8" name="domain-access-control-7-common-exceptions-flow"/>
+					</on-error-continue>
+	</error-handler>
+<flow name="domain-access-control-7-common-exceptions-flow" doc:id="3e9755bf-1c46-406a-8cd0-df8966aaca9d" >
+		<logger level="INFO" doc:name="Log Exception [INFO]" doc:id="110af44e-8db9-4620-9a07-13a074f530e8" message="##MEG-CUSTOM ## EXCEPTION ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName] ## ECID: #[attributes.headers.client_correlationid] ## CALLING CLIENT: #[attributes.headers.client_id] ## EXCEPTION CAUSE :  #[error.cause]  ## ERROR DESCRIPTON : #[error.descripton]" category="com.merlin.log.custom" doc:description="Logs the exception info when logging is set to INFO "/>
+		<ee:dynamic-evaluate doc:name="Load Exception Template" doc:id="551b69d5-ca57-4d48-ae89-a7e010f4220b" expression="#[readUrl('classpath://exceptionTemplates/' ++ vars.flowName ++ '-template.txt','application/java')]">
+			<ee:parameters >#[{appName: app.name, flowName:vars.flowName, errorMessage: error.description as String, merlinCorrelationId: correlationId}]</ee:parameters>
+		</ee:dynamic-evaluate>
+		<ee:transform doc:name="prepare for cloudhub notification" doc:id="d5c23f28-dc04-4302-8300-a4072900c963">
+				<ee:message>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="cloudhubProperties"><![CDATA[%dw 2.0
+output application/java
+---
+{
+ alertFlowName: vars.flowName,
+ merlinCorrelationId: correlationId,
+ cloudhubDomain: p('secure::cloudhub.domain'),
+ cloudhubEnv: p('secure::cloudhub.env')
+}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			
+			<choice doc:name="Choice" doc:id="5b038213-9b25-4ec6-8e73-b3445e20ef54" >
+				<when expression="${secure::cloudhub.disable.alert}==false">
+					<cloudhub:create-notification domain="${secure::cloudhub.domain}" doc:name="Create Notification" doc:id="18939fd1-72e5-4e66-ab0f-38920eeef869" config-ref="CloudHub_Config">
+						<cloudhub:message ><![CDATA[#['GenAlert1_' ++ '500' ++ '_' ++ vars.flowName]]]></cloudhub:message>
+						<cloudhub:custom-properties ><![CDATA[#[output application/java
+---
+{
+	exceptionAlertBody : payload,
+	cloudhubDomain : vars.cloudhubProperties.cloudhubDomain,
+	env : vars.cloudhubProperties.cloudhubEnv,
+	appName : app.name
+}]]]></cloudhub:custom-properties>
+						
+					</cloudhub:create-notification>
+				</when>
+				<otherwise >
+					<logger level="INFO" doc:name="Logger [INFO]" doc:id="11d8c7c2-1ce2-457f-81db-2d4897e7a72e" message="##MEG-CUSTOM ## N ## APP_NAME: #[app.name] ## FLOW_NAME: #[vars.flowName] ## ECID: #[attributes.headers.client_correlationid] ## CALLING CLIENT: #[attributes.headers.client_id]  "/>
+				</otherwise>
+			</choice>
+		<ee:transform doc:description="prepare error response" doc:name="Prepare Error Response" doc:id="60d7b8e2-3456-4c75-9d12-98ee611320d4" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error:{
+		code: vars.httpStatus,
+		message: vars.errorMessage default error.description,
+		description: error.errorType.namespace as String ++ ':' ++ error.errorType.identifier as String
+		}
+}]]></ee:set-payload>
+				</ee:message>
+				
+			</ee:transform>
+
+	</flow>
+	<error-handler name="api-kit-error-handler">
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+        
+        
+             <error-handler name="api-kit-console-not-found-error-handler">
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="ce0f75ba-e7bf-4c41-b1fb-5c4538697963">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>	
+	
+	</mule>

@@ -1,0 +1,7 @@
+{
+  "error" : {
+    "code" : "400",
+    "message" : "Bad Request",
+    "description" : "A Badly formed Request has been provided. Please ensure the request URI is accurate"
+  }
+}

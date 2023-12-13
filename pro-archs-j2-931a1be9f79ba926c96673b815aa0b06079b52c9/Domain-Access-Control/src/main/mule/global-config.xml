@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub"
+	xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd">
+	<http:listener-config name="domain-access-control-httpListenerConfig">
+		<http:listener-connection host="${secure::http.host}"
+			port="${secure::http.port}" connectionIdleTimeout="${secure::connection.idle.timeout}" protocol="HTTPS">
+		 	<tls:context >
+				<tls:key-store type="jks" keyPassword="${secure::keystore.password}" password="${secure::keystore.password}" path="secured.jks"/>
+			</tls:context>
+		</http:listener-connection>
+	</http:listener-config>
+
+	<apikit:config name="domain-access-control-config" raml="domain-access-control.raml"
+		outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus">
+		<apikit:flow-mappings>
+			<apikit:flow-mapping resource="/ticket/updateAccess" action="post" content-type="application/xml" flow-ref="domain-access-control-update-access-flow" />
+			<apikit:flow-mapping resource="/ticket/grantaccess" action="post" content-type="application/xml" flow-ref="domain-access-control-grant-access-flow" />
+			<apikit:flow-mapping resource="/ticket/suspendaccess" action="post" content-type="application/xml" flow-ref="domain-access-control-suspend-access-flow" />
+			<apikit:flow-mapping resource="/ticket/restoreaccess" action="post" content-type="application/xml" flow-ref="domain-access-control-restore-access-flow" />
+			<apikit:flow-mapping resource="/inquiry" action="post" content-type="application/xml" flow-ref="domain-access-control-inquire-access-flow" />
+		</apikit:flow-mappings>
+	</apikit:config>
+	<http:request-config name="adapterHSH_httpRequest_configuration" doc:name="HTTP Request configuration" doc:id="d40f4af6-9ece-4321-9d86-7d50519ce7f5" basePath="/v1-0">
+		<http:request-connection host="#[p('adapterhandshake.host')]" protocol="HTTPS" port="#[p('adapterhandshake.port')]">
+			<tls:context >
+				<tls:trust-store path="secured.jks" password="${secure::keystore.password}" insecure="true"/>
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+	
+	<secure-properties:config key="H65Y34de78rr786g"
+		file="config/${env}.yaml" name="Secure_Property_Placeholder">
+		<secure-properties:encrypt algorithm="Blowfish" mode="CBC"/>
+	</secure-properties:config>
+	<global-property doc:name="Global Property" doc:id="1562d4a3-001a-4167-9205-f0c7efe3fee6" name="env" value="local" />
+	<configuration-properties doc:name="Configuration properties" doc:id="c16ca844-df99-464f-afaa-2b6f94742845" file="config/common.yaml" />
+	<anypoint-mq:default-subscriber-config name="Anypoint_MQ_Default_subscriber" doc:name="Anypoint MQ Default subscriber" doc:id="8142ad4d-f251-4ab4-a7a0-61ca1ed4e079">
+		<anypoint-mq:connection clientId="${anypointmq.clientid}" clientSecret="${anypointmq.clientsecret}" url="${anypointmq.url}"/>
+	</anypoint-mq:default-subscriber-config>
+	
+
+	<cloudhub:config name="CloudHub_Config" doc:name="CloudHub Config" doc:id="27b7f4d6-7db6-48a7-a5c3-b9f028416ef6" >
+		<cloudhub:connection username="${secure::cloudhub.user}" password="${secure::cloudhub.pwd}" environment="${secure::cloudhub.env}" />
+	</cloudhub:config>
+	<!-- <api-gateway:autodiscovery apiId="${secure::api.key}" doc:name="API Autodiscovery" doc:id="a9b20855-560b-41e9-9d5c-98280bf721fa" flowRef="domain-access-control-main" /> -->
+	<configuration-properties doc:name="Configuration properties" doc:id="725810a9-16bc-4250-b1bd-a5013da0cd95" file="translationTables/merlin-access-control-override.properties" />
+	
+	
+	</mule>

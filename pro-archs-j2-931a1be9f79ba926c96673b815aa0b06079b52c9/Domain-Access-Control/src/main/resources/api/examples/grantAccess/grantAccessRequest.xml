@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GrantAccessRQ RequestorId="90" RetransmissionIndicator="false" TimeStamp="2018-10-04T07:48:35" Version="2015.1">
+			<Accesses>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000021</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Product>
+						<PLU>0</PLU>
+						<NetPrice>149.17</NetPrice>
+						<Tax>29.83</Tax>
+					</Product>
+					<Validity>
+						<StartDateTime>2016-01-01T00:00:00</StartDateTime>
+						<EndDateTime>2019-10-11T00:00:00</EndDateTime>
+					</Validity>
+				</Access>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000022</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Product>
+						<PLU>0</PLU>
+						<NetPrice>149.17</NetPrice>
+						<Tax>29.83</Tax>
+					</Product>
+					<Validity>
+						<StartDateTime>2016-01-01T00:00:00</StartDateTime>
+						<EndDateTime>2019-10-11T00:00:00</EndDateTime>
+					</Validity>
+				</Access>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000023</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Product>
+						<PLU>0</PLU>
+						<NetPrice>149.17</NetPrice>
+						<Tax>29.83</Tax>
+					</Product>
+					<Validity>
+						<StartDateTime>2016-01-01T00:00:00</StartDateTime>
+						<EndDateTime>2019-10-11T00:00:00</EndDateTime>
+					</Validity>
+				</Access>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000024</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Product>
+						<PLU>0</PLU>
+						<NetPrice>149.17</NetPrice>
+						<Tax>29.83</Tax>
+					</Product>
+					<Validity>
+						<StartDateTime>2016-01-01T00:00:00</StartDateTime>
+						<EndDateTime>2019-10-11T00:00:00</EndDateTime>
+					</Validity>
+				</Access>
+				<Access>
+					<IssuerId>UKCNMAP</IssuerId>
+					<AccessCode>80501</AccessCode>
+					<VisualId Type="Code 128">998050190000000025</VisualId>
+					<AttractionId>UKCNMAP</AttractionId>
+					<Product>
+						<PLU>0</PLU>
+						<NetPrice>149.17</NetPrice>
+						<Tax>29.83</Tax>
+					</Product>
+					<Validity>
+						<StartDateTime>2016-01-01T00:00:00</StartDateTime>
+						<EndDateTime>2019-10-11T00:00:00</EndDateTime>
+					</Validity>
+				</Access>
+			</Accesses>
+		</GrantAccessRQ>
